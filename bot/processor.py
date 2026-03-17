@@ -1,44 +1,32 @@
 import os
 from openai import OpenAI
 
-# Client initialize karein (Make sure aapki API KEY environment variable mein ho ya yahan pass karein)
-client = OpenAI(api_key="YOUR_OPENAI_API_KEY_HERE")
+client = OpenAI(api_key="YOUR_OPENAI_KEY")
 
 def process_meeting_data(audio_path, meeting_id):
-    if not os.path.exists(audio_path):
-        print("Audio file nahi mili!")
-        return
+    if not os.path.exists(audio_path): return
 
     try:
-        # Whisper transcription (Naya tareeka)
-        with open(audio_path, "rb") as audio_file:
-            transcript = client.audio.transcriptions.create(
-                model="whisper-1", 
-                file=audio_file
-            )
+        with open(audio_path, "rb") as f:
+            transcript = client.audio.transcriptions.create(model="whisper-1", file=f)
         
-        transcript_text = transcript.text
-        
-        # Summary generation
+        text = transcript.text
+
+        # Requirement 4 & 5 ka structured prompt
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant that creates Minutes of Meeting (MOM)."},
-                {"role": "user", "content": f"Summarize this transcript into a professional MOM:\n\n{transcript_text}"}
-            ]
+            messages=[{
+                "role": "system", 
+                "content": "You are a professional meeting assistant. Create a Minutes of Meeting (MOM) with: 1. Executive Summary, 2. Topic-wise Details, 3. Decisions Made, 4. Action Items."
+            },
+            {"role": "user", "content": f"Transcript: {text}"}]
         )
+
+        mom = response.choices[0].message.content
         
-        mom_content = response.choices[0].message.content
-
-        # Save to outputs folder
-        if not os.path.exists('outputs'):
-            os.makedirs('outputs')
+        os.makedirs('outputs', exist_ok=True)
+        with open(f"outputs/MOM_{meeting_id}.txt", "w") as f:
+            f.write(mom)
             
-        output_file = f"outputs/MOM_{meeting_id}.txt"
-        with open(output_file, "w", encoding="utf-8") as f:
-            f.write(mom_content)
-            
-        print(f"Success! MOM saved for meeting {meeting_id}")
-
     except Exception as e:
-        print(f"AI Processing mein error: {str(e)}")
+        print(f"Error in AI: {e}")
