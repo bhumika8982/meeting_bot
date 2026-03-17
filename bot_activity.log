@@ -1,0 +1,25 @@
+[2026-03-17 12:10:25] Attempting to join Meeting ID: 81906791541
+[2026-03-17 12:11:00] Critical Error: Message: 
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x7ff7aa8f42a5
+	0x7ff7aa8f4300
+	0x7ff7aa68d49d
+	0x7ff7aa6e82fe
+	0x7ff7aa6e860c
+	0x7ff7aa738b67
+	0x7ff7aa735728
+	0x7ff7aa6d8e38
+	0x7ff7aa6d9d23
+	0x7ff7aabc3010
+	0x7ff7aabbd898
+	0x7ff7aabddc0a
+	0x7ff7aa910655
+	0x7ff7aa9195fc
+	0x7ff7aa8fd604
+	0x7ff7aa8fd7b6
+	0x7ff7aa8e32c7
+	0x7ff896a67374
+	0x7ff897d9cc91
+
+[2026-03-17 12:11:02] Bot session closed. Cleanup finished.

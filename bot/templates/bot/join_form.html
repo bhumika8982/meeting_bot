@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zoom Bot Controller</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f0f2f5; margin: 0; }
+        .card { background: white; padding: 2.5rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 380px; }
+        h2 { color: #2d8cff; text-align: center; margin-bottom: 1.5rem; }
+        label { font-weight: bold; color: #444; font-size: 14px; }
+        input { width: 100%; padding: 12px; margin: 8px 0 20px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; transition: 0.3s; }
+        input:focus { border-color: #2d8cff; outline: none; box-shadow: 0 0 5px rgba(45,140,255,0.3); }
+        button { width: 100%; padding: 12px; background-color: #2d8cff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s; }
+        button:hover { background-color: #1a73e8; transform: translateY(-1px); }
+        #statusMessage { margin-top: 15px; padding: 10px; border-radius: 5px; text-align: center; display: none; font-size: 14px; }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Meeting Assistant</h2>
+    
+    <form id="botForm" action="/bot/api/join/" method="POST">
+        {% csrf_token %}
+        
+        <label>Meeting ID:</label>
+        <input type="text" name="meeting_id" placeholder="Ex: 123 456 7890" required>
+        
+        <label>Passcode (if any):</label>
+        <input type="password" name="passcode" placeholder="Meeting Password">
+        
+        <button type="submit" id="submitBtn">Join Zoom Meeting</button>
+    </form>
+
+    <div id="statusMessage"></div>
+</div>
+
+<script>
+    const form = document.getElementById('botForm');
+    const statusDiv = document.getElementById('statusMessage');
+    const btn = document.getElementById('submitBtn');
+
+    form.onsubmit = async (e) => {
+        e.preventDefault(); // Page refresh hone se rokne ke liye
+        
+        btn.disabled = true;
+        btn.innerText = "Initiating Bot...";
+        statusDiv.style.display = "block";
+        statusDiv.className = "success";
+        statusDiv.innerText = "Sending request to server...";
+
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                statusDiv.className = "success";
+                statusDiv.innerText = "✅ " + result.message;
+            } else {
+                statusDiv.className = "error";
+                statusDiv.innerText = "❌ Error: " + (result.error || "Failed to start bot");
+            }
+        } catch (error) {
+            statusDiv.className = "error";
+            statusDiv.innerText = "❌ Server connection failed!";
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Join Zoom Meeting";
+        }
+    };
+</script>
+
+</body>
+</html>
