@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zoom Bot Controller</title>
+    <title>Meeting Assistant</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f0f2f5; margin: 0; }
         .card { background: white; padding: 2.5rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 380px; }
@@ -13,6 +13,7 @@
         input:focus { border-color: #2d8cff; outline: none; box-shadow: 0 0 5px rgba(45,140,255,0.3); }
         button { width: 100%; padding: 12px; background-color: #2d8cff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s; }
         button:hover { background-color: #1a73e8; transform: translateY(-1px); }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
         #statusMessage { margin-top: 15px; padding: 10px; border-radius: 5px; text-align: center; display: none; font-size: 14px; }
         .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
@@ -23,14 +24,14 @@
 <div class="card">
     <h2>Meeting Assistant</h2>
     
-    <form id="botForm" action="/bot/api/join/" method="POST">
+    <form id="botForm" action="/api/bot/start/" method="POST">
         {% csrf_token %}
         
         <label>Meeting ID:</label>
-        <input type="text" name="meeting_id" placeholder="Ex: 123 456 7890" required>
+        <input type="text" id="meetingId" name="meeting_id" placeholder="Ex: 819 0679 1541" required>
         
         <label>Passcode (if any):</label>
-        <input type="password" name="passcode" placeholder="Meeting Password">
+        <input type="password" id="passcode" name="passcode" placeholder="Meeting Password">
         
         <button type="submit" id="submitBtn">Join Zoom Meeting</button>
     </form>
@@ -44,13 +45,13 @@
     const btn = document.getElementById('submitBtn');
 
     form.onsubmit = async (e) => {
-        e.preventDefault(); // Page refresh hone se rokne ke liye
+        e.preventDefault(); 
         
         btn.disabled = true;
-        btn.innerText = "Initiating Bot...";
+        btn.innerText = "Connecting Bot...";
         statusDiv.style.display = "block";
         statusDiv.className = "success";
-        statusDiv.innerText = "Sending request to server...";
+        statusDiv.innerText = "Requesting server to join...";
 
         const formData = new FormData(form);
 
@@ -59,7 +60,8 @@
                 method: 'POST',
                 body: formData,
                 headers: {
-                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                    // Django requirement for AJAX POST
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
                 }
             });
 
@@ -67,7 +69,7 @@
 
             if (response.ok) {
                 statusDiv.className = "success";
-                statusDiv.innerText = "✅ " + result.message;
+                statusDiv.innerHTML = `✅ <b>Success:</b> ${result.message || "Bot is joining the meeting!"}`;
             } else {
                 statusDiv.className = "error";
                 statusDiv.innerText = "❌ Error: " + (result.error || "Failed to start bot");
@@ -75,6 +77,7 @@
         } catch (error) {
             statusDiv.className = "error";
             statusDiv.innerText = "❌ Server connection failed!";
+            console.error("Fetch Error:", error);
         } finally {
             btn.disabled = false;
             btn.innerText = "Join Zoom Meeting";
